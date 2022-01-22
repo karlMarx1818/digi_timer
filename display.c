@@ -1,6 +1,7 @@
 #pragma once
 #include "display.h"
-
+#define TEMP_30C  *((unsigned int *)0x1A1A) //温度传感器校准后 1.5V,30C时 数据的地址
+#define TEMP_85C  *((unsigned int *)0x1A1C)
 void date_to_str(char* str)
 {
     str[0]=date/10000000+'0';
@@ -180,7 +181,8 @@ void show_counter()
 int temp;  
 void get_temp(char* _temp)
 {
-    temp=( 30+(temp-TEMP_30C)*55.0/(TEMP_85C-TEMP_30C) )*10;
+    //temp=( 30+(temp-TEMP_30C)*55.0/(TEMP_85C-TEMP_30C) )*10;
+    temp=(30+(temp-2225)*11.0/69.0)*10;
     _temp[5]='\0';_temp[4]='C';
     _temp[0]=temp/100+'0';_temp[1]=temp%100/10+'0';
     _temp[2]='.';_temp[3]=temp%10+'0';

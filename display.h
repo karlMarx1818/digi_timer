@@ -3,8 +3,7 @@
 //#include "oled.h"
 #include "IO.h"
 #define GET_BIT(val,n)   ( ( (val) & (1<<(n)) )?1:0 )
-#define TEMP_30C  *((unsigned int *)0x1A1A) //温度传感器校准后 1.5V,30C时 数据的地址                                   
-#define TEMP_85C  *((unsigned int *)0x1A1C) 
+
 
 extern long time,counter,timer;
 extern long date,alarm[4],alarmctl;

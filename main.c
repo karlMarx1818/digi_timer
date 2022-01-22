@@ -68,7 +68,8 @@ __interrupt void TIMER0_A0_ISR(void)
 
 	if(mode==0)show_homepage();
 	//if(mode==14&&counter>=0)show_counter();
-	if(counter>=0&&counter<99999)counter--;
+	if(counter>0&&counter<99999)counter--;
+	if(counter==0){counter--;belling=10;bell_on();led_on();}
 	if(timer>=0&&timer<99999)timer++;
 	if(check_alarm())
 		{belling=20;bell_on();led_on();}
