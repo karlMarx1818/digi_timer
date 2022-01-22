@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <msp430.h> 
 #include "time.h"
-//#define GET_BIT(val,n)   ( ( (val) & (1<<(n)) )?1:0 )
+#define GET_BIT(val,n)   ( ( (val) & (1<<(n)) )?1:0 )
 //#include "IO.h"
 //#include "display.h"
 
@@ -42,13 +42,18 @@ void initialize()
     ADC12IE=ADC12IE0;
     _delay_cycles(100);
     ADC12CTL0 |= ADC12ENC;
+
+	TB0CTL = TBSSEL_1 + TBCLR + MC_1;
+	TB0CCR0=3277;
+	TB0CCTL0 = CCIE;
 }
 int main(void)
 {
 	initialize();
 	while (1)
 	{
-		if(!mode&&getch()=='*')mode=1;
+		if(!mode&&getchar()=='*')mode=1;
+		if(getchar()=='D')alarmctl ^= BIT5;//12/24h
 		if(mode==1)show_menu();
 		if(mode==11)set_time();
 		if(mode==12)choose_alarm();

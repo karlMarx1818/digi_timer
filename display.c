@@ -1,5 +1,6 @@
 #pragma once
 #include "display.h"
+#define GET_BIT(val,n)   ( ( (val) & (1<<(n)) )?1:0 )
 #define TEMP_30C  *((unsigned int *)0x1A1A) //温度传感器校准后 1.5V,30C时 数据的地址
 #define TEMP_85C  *((unsigned int *)0x1A1C)
 void date_to_str(char* str)
@@ -30,14 +31,34 @@ void show_homepage()
 {
     static char _date[11],_week;
     char _time[9],_temp[6];
-	time_to_str(time,_time);
-	OLED_ShowString(0*8, 2, _time);//时间
+	
+    if(GET_BIT(alarmctl,5))
+    {   time_to_str(time,_time);
+	    OLED_ShowString(0*8, 2, _time);//时间
+    }
+    else {
+        if(time<43200){
+            time_to_str(time,_time);
+	        OLED_ShowString(0*8, 2, _time);
+	        OLED_ShowString(9*8, 2, "AM");
+        }
+        else if(time<46800){
+            time_to_str(time,_time);
+	        OLED_ShowString(0*8, 2, _time);
+	        OLED_ShowString(9*8, 2, "PM");
+        }
+        else {
+            time_to_str(time-43200,_time);
+	        OLED_ShowString(0*8, 2, _time);
+	        OLED_ShowString(9*8, 2, "PM");
+        }
+    }
 
     if(update){date_to_str(_date);_week=week();}
 	OLED_ShowString(0*8,0, _date);//日期
     
-    OLED_ShowCHinese(9*8,2,17);
-    OLED_ShowCHinese(11*8,2,_week+18);//星期
+    OLED_ShowCHinese(12*8,2,17);
+    OLED_ShowCHinese(14*8,2,_week+18);//星期
     
     get_temp(_temp);
     OLED_ShowString(11*8,0, _temp);
@@ -120,24 +141,32 @@ void show_timer()
     if(timer<99999){OLED_ShowCHinese(8*12,2,30);OLED_ShowCHinese(8*14,2,31);}//暂停
     else    {OLED_ShowCHinese(8*12,2,34);OLED_ShowCHinese(8*14,2,35);
             OLED_ShowCHinese(8*12,4,32);OLED_ShowCHinese(8*14,4,33);}
-
-    //TA2CTL |= ID_0 +TASSEL_1 +MC_1;
-    //TA2CCR0=3276;
-    //TA2CCTL0 |= CCIE;
-    
-    if(getchar()=='B')
+    if(getchar()=='B')//暂停、继续
     {
-        //TA2CTL |= MC_0;
-        //TA2CCTL0 &=~ CCIE;
         if(timer<99999)timer+=100000;
         else timer-=100000;
     }
-    if(getchar()=='C')
-        timer=-1;
-
+    if(getchar()=='C')//清零
+        {timer=-1;OLED_Clear();return;}
     if(timer<99999)
-	    time_to_str(timer,_timer);
-	OLED_ShowString(0*8, 2, _timer);
+	{
+	    //time_to_str(timer,_timer);
+        _timer[8]='.';_timer[9]=second_10+'0';//_timer[10]='\0';
+        OLED_ShowString(0*8, 2, _timer);
+    }
+}
+//中断只使0.1s位+1，但不再刷新屏幕；刷新屏幕放到了main的while(1)里
+//否则若将OLED_SHOW放在该中断中，会花屏，猜测原因是上一次刷新屏幕未结束又触发了中断，死嵌套
+#pragma vector=TIMERB0_VECTOR
+__interrupt void TIMERB0_ISR (void)
+{
+    if(timer>=0&&timer<99999)
+    {   second_10 = second_10 + 1;
+        if (second_10 == 10)
+        {   second_10 = 0;
+            time_to_str(timer, _timer);
+        }
+    }
 }
 /*
 #pragma vector=TIMER2_A0_VECTOR
