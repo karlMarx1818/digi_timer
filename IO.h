@@ -3,7 +3,7 @@
 #define GET_BIT(val,n)   ( ( (val) & (1<<(n)) )?1:0 )
 extern long time,counter;
 extern long date,alarm[4],alarmctl;
-extern char x,y,mode;
+extern char x,y,mode,belling;
 extern char update;
 
 //有do while，读取必须的输入，如设置时间、闹钟
