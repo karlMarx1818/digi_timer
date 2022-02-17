@@ -11,3 +11,4 @@ void set_alarm(char n);//设置第n个闹钟
 void save_alarm();//将闹钟存至infoB flash :0x1900
 void get_alarm();//从flash中读取闹钟
 char check_alarm();//判断是否触发闹钟
+char error_check(int year,char month,char day,char hh,char mm,char ss);

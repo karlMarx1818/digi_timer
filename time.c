@@ -9,44 +9,52 @@ extern char update;
 void set_time()//设置时间
 {
     OLED_Clear();
-    char str[]="____  __  __  ";
-    OLED_ShowString(0,0,str);
+    OLED_ShowString(0,0,"____  __  __  ");
     OLED_ShowCHinese(8*4,0,0);//年
     OLED_ShowCHinese(8*8,0,1);//月
     OLED_ShowCHinese(8*12,0,2);//日
     OLED_ShowCHinese(8*0,6,25);//确
     OLED_ShowCHinese(8*2,6,26);//认
-    char str2[]="__:__";
-    OLED_ShowString(8*4,2,str2);
+    OLED_ShowString(8*0,2,"__:__:__");
+    OLED_ShowString(12*8, 2, "PM");
     x=y=0;time=date=0;
-    char num[13];
-
-    num[0]=getnume();if(mode!=11){OLED_Clear();return;}
-    num[1]=getnume();if(mode!=11){OLED_Clear();return;}
-    num[2]=getnume();if(mode!=11){OLED_Clear();return;}
-    num[3]=getnume();if(mode!=11){OLED_Clear();return;}
+    char month,day,hh,mm,ss,ch;month=day=hh=mm=ss=0;int year=0;
+    //yyyy mm dd
+    year=getnume();if(mode!=11){OLED_Clear();return;}
+    year=10*year+getnume();if(mode!=11){OLED_Clear();return;}
+    year=10*year+getnume();if(mode!=11){OLED_Clear();return;}
+    year=10*year+getnume();if(mode!=11){OLED_Clear();return;}
     x=6;
-    num[4]=getnume();if(mode!=11){OLED_Clear();return;}
-    num[5]=getnume();if(mode!=11){OLED_Clear();return;}
+    month=getnume();if(mode!=11){OLED_Clear();return;}
+    month=10*month+getnume();if(mode!=11){OLED_Clear();return;}
     x=10;
-    num[6]=getnume();if(mode!=11){OLED_Clear();return;}
-    num[7]=getnume();if(mode!=11){OLED_Clear();return;}
-    x=4,y=2;
-    num[8]=getnume();if(mode!=11){OLED_Clear();return;}
-    num[9]=getnume();if(mode!=11){OLED_Clear();return;}
-    x=7;
-    num[10]=getnume();if(mode!=11){OLED_Clear();return;}
-    num[11]=getnume();if(mode!=11){OLED_Clear();return;}
+    day=getnume();if(mode!=11){OLED_Clear();return;}
+    day=10*day+getnume();if(mode!=11){OLED_Clear();return;}
 
+    //hh:mm:ss
+    x=0,y=2;
+    hh=getnume();if(mode!=11){OLED_Clear();return;}
+    hh=10*hh+getnume();if(mode!=11){OLED_Clear();return;}
+    x=3;
+    mm=getnume();if(mode!=11){OLED_Clear();return;}
+    mm=10*mm+getnume();if(mode!=11){OLED_Clear();return;}
+    x=6;
+    ss=getnume();if(mode!=11){OLED_Clear();return;}
+    ss=10*ss+getnume();if(mode!=11){OLED_Clear();return;}
     do{
-        num[12]=getch();
+        ch=getch();
+        if(ch=='B')
+        {
+            OLED_ShowCHinese(14*8,2,36);
+            if(hh!=12)hh+=12;
+        }
         if(mode!=11){OLED_Clear();return;}
-    }while(num[12]!='*');
+    }while(ch!='*');
+    if(error_check(year,month,day,hh,mm,ss))return;
     update=1;
     char i=0;date=time=0;
-    for(;i<8;i++)
-        date=10*date+num[i];
-    time=num[8]*36000+num[9]*3600+num[10]*600+num[11]*60;
+    date=(long)year*10000+(long)month*100+day;
+    time=(long)hh*3600+(long)mm*60+ss;
     save_time();mode/=10;
 }
 void get_time()//从flash中读取时间
@@ -156,4 +164,26 @@ void set_counter()
     }while(num[6]!='A');
     counter=num[0]*36000+num[1]*3600+num[2]*600+num[3]*60+num[4]*10+num[5];
     OLED_Clear();
+}
+
+char error_check(int year,char month,char day,char hh,char mm,char ss)//1-error;0-no-error
+{
+    do{
+        if(day>28&&month==2&&(!((year%4==0&&year%100!=0)||year%400==0)) )
+            break;//平年2月超过28
+        if(day>29&&month==2&&((year%4==0&&year%100!=0)||year%400==0))
+            break;//闰年2月超过29
+        if(day>30&&(month==4||month==6||month==9||month==11))
+            break;//小月超过30
+        if(day>31)break;
+        if(month>12)break;
+        if(hh>23)break;
+        if(mm>59)break;
+        if(ss>59)break;
+        return 0;
+    }while(0);
+    OLED_Clear();
+    OLED_ShowString(0,2,"ILLEGAL INPUT!");
+    getch();
+    return 1;
 }
